@@ -5,7 +5,8 @@
 
 int main(int argc, char *argv[]){
 
-	class USBIDs *a = new class USBIDs("./input");
+	// class USBIDs *a = new class USBIDs("./input");
+	class USBIDs *a = new class USBIDs("./content");
 
 	if(argc == 4 && static_cast<std::string>(argv[1]) == "id"){
 		//--------------------------------------------

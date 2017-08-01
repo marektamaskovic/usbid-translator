@@ -22,8 +22,12 @@ private:
 	int parseVendor(std::vector<vendor_t> &, const std::string &);
 	int parseDevice(std::vector<vendor_t> &, const std::string &);
 	int parseInterface(std::vector<vendor_t> &, const std::string &);
+	int parseHutPage(const std::string &);
+	int parseHutUsage(const std::string &);
+
 
 	std::vector<vendor_t> vendor_list;
+	usb_ids_t usb_info;
 };
 
 #endif

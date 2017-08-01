@@ -25,4 +25,20 @@ typedef struct {
 	std::vector<device_t> devices;
 } vendor_t;
 
+typedef struct {
+	uint16_t id;
+	std::string name;
+} hid_usage_t;
+
+typedef struct {
+	uint8_t id;
+	std::string name;
+	std::vector<hid_usage_t> usage;
+} hid_usage_page_t;
+
+typedef struct {
+	std::vector<vendor_t> vendors;
+	std::vector<hid_usage_page_t> hid_usage_pages;
+} usb_ids_t;
+
 #endif
