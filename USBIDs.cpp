@@ -8,16 +8,64 @@ USBIDs::USBIDs(const std::string& filepath){
 }
 
 std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
-	(void) vid;
-	(void) pid;
-	return "id";
+
+	for(auto page_iter = usb_info.hid_usage_pages.begin();
+		page_iter != usb_info.hid_usage_pages.end();
+		++page_iter)
+	{
+		if(page_iter->id == vid && page_iter->usage.size() != 0){
+			for(auto usage_iter = page_iter->usage.begin();
+				usage_iter != page_iter->usage.end();
+				++usage_iter)
+			{
+				if(usage_iter->id == pid){
+					return page_iter->name + "::" + usage_iter->name;
+				}
+			}
+		}
+		else if(page_iter->id == vid && page_iter->usage.size() == 0){
+			return page_iter->name;
+		}
+	}
+
+	return "Not found!";
 }
 
-std::string USBIDs::interfaceToString(uint8_t c, uint8_t s, uint8_t p){
-	(void)c;
-	(void)s;
-	(void)p;
-	return "interface";
+std::string USBIDs::interfaceToString(uint16_t c, uint16_t s, uint16_t p){
+
+	for(auto vendor_it = usb_info.vendors.begin();
+		vendor_it != usb_info.vendors.end();
+		++vendor_it)
+	{
+		if(vendor_it->id == c && vendor_it->devices.size() != 0){
+			for(auto device_it = vendor_it->devices.begin();
+				device_it != vendor_it->devices.end();
+				++device_it)
+			{
+				if(device_it->id == s && device_it->interfaces.size() != 0){
+					for(auto interface_it = device_it->interfaces.begin();
+						interface_it != device_it->interfaces.end();
+						++interface_it)
+					{
+						if(interface_it->id == p){
+							return vendor_it->name
+								   + "::" + device_it->name
+								   + "::" + interface_it->name;
+						}
+					}
+				}
+				else if(device_it->id == s && device_it->interfaces.size() == 0){
+					return vendor_it->name + "::" + device_it->name;
+				}
+			}
+		}
+		else if(vendor_it->id == c && vendor_it->devices.size() == 0){
+			return vendor_it->name;
+		}
+
+	}
+
+	return "Not found";
 }
 
 #if 1
@@ -46,15 +94,12 @@ int USBIDs::parseStream(const std::string& filepath){
 
 
 
-	// FIXME add switches for HID and other things.
-	// bool vendor_flag = false;
-	// bool hid_usage_flag = false;
 	bool last_language = false;
 
 	while(file.good()){
 		std::getline(file, line);
 		if(line[0] == '#') {
-			std::cout << "comment: '" << line << "'" << std::endl;
+			// std::cout << "comment: '" << line << "'" << std::endl;
 			continue;
 		}
 		if (std::regex_search(line, vendor_line)) {
@@ -84,15 +129,16 @@ int USBIDs::parseStream(const std::string& filepath){
 			// 		  << this->vendor_list.back().devices.back().interfaces.back().name
 			// 		  << std::endl;
 		}
+		// TIP try macro
 		else if(std::regex_search(line, c_name)){
 			last_language = false;
-			std::cout << "c_name: '" << line << "'" << std::endl;
+			// std::cout << "c_name: '" << line << "'" << std::endl;
 		}
 		else if(!last_language && std::regex_search(line, c_subname)){
-			std::cout << "c_subname: '" << line << "'" << std::endl;
+			// std::cout << "c_subname: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, c_protocol)){
-			std::cout << "c_protocol: '" << line << "'" << std::endl;
+			// std::cout << "c_protocol: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, hut_page)){
 			// std::cout << "hut_page: '" << line << "'" << std::endl;
@@ -103,35 +149,35 @@ int USBIDs::parseStream(const std::string& filepath){
 			parseHutUsage(line);
 		}
 		else if(std::regex_search(line, at)){
-			std::cout << "at: '" << line << "'" << std::endl;
+			// std::cout << "at: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, hid)){
-			std::cout << "hid: '" << line << "'" << std::endl;
+			// std::cout << "hid: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, r)){
-			std::cout << "r: '" << line << "'" << std::endl;
+			// std::cout << "r: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, phy)){
-			std::cout << "phy: '" << line << "'" << std::endl;
+			// std::cout << "phy: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, bias)){
-			std::cout << "bias: '" << line << "'" << std::endl;
+			// std::cout << "bias: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, l_language)){
-			std::cout << "l_language: '" << line << "'" << std::endl;
+			// std::cout << "l_language: '" << line << "'" << std::endl;
 			last_language = true;
 		}
 		else if(std::regex_search(line, l_dialect)){
-			std::cout << "l_dialect: '" << line << "'" << std::endl;
+			// std::cout << "l_dialect: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, hcc)){
-			std::cout << "hcc: '" << line << "'" << std::endl;
+			// std::cout << "hcc: '" << line << "'" << std::endl;
 		}
 		else if(std::regex_search(line, vt)){
-			std::cout << "vt: '" << line << "'" << std::endl;
+			// std::cout << "vt: '" << line << "'" << std::endl;
 		}
 		else{
-			std::cout <<"nope: '" << line << "'" <<std::endl;
+			// std::cout <<"nope: '" << line << "'" <<std::endl;
 		}
 
 	}
@@ -145,6 +191,7 @@ int USBIDs::parseStream(const std::string& filepath){
 }
 #endif
 
+// TIP use template
 int USBIDs::parseVendor(std::vector<vendor_t> &vendor_list, const std::string &line){
 	std::string name;
 	uint32_t id;
@@ -210,8 +257,8 @@ int USBIDs::parseHutPage(const std::string &line){
 	name = line.substr(8);
 
 	h_page->name = name;
-	// converting from 32bit to 8bit integer;
-	h_page->id = (id & 0x000000ff);
+	// converting from 32bit to 16bit integer;
+	h_page->id = (id & 0x0000ffff);
 
 	this->usb_info.hid_usage_pages.push_back(*h_page);
 	// std::cout << "H_Page: "

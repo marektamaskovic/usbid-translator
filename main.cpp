@@ -12,8 +12,8 @@ int main(int argc, char *argv[]){
 		//--------------------------------------------
 		// WARNING WARNING WARNING WARNING WARNING
 		//--------------------------------------------
-		uint16_t vid = static_cast<uint16_t>(std::stoi(argv[2]));
-		uint16_t pid = static_cast<uint16_t>(std::stoi(argv[3]));
+		uint16_t vid = static_cast<uint16_t>(std::stoi(argv[2], 0, 16));
+		uint16_t pid = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
 		//--------------------------------------------
 
 		std::string output = a->idToString(vid, pid);
@@ -23,9 +23,9 @@ int main(int argc, char *argv[]){
 		//--------------------------------------------
 		// WARNING WARNING WARNING WARNING WARNING
 		//--------------------------------------------
-		uint16_t c = static_cast<uint16_t>(std::stoi(argv[2]));
-		uint16_t s = static_cast<uint16_t>(std::stoi(argv[3]));
-		uint16_t p = static_cast<uint16_t>(std::stoi(argv[4]));
+		uint16_t c = static_cast<uint16_t>(std::stoi(argv[2], 0, 16));
+		uint16_t s = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
+		uint16_t p = static_cast<uint16_t>(std::stoi(argv[4], 0, 16));
 		//--------------------------------------------
 
 		std::string output = a->interfaceToString(c, s, p);
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]){
 				  << "    interface\tC S P\t" << std::endl;
 	}
 
+	delete a;
 
 	return 0;
 }

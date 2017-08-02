@@ -31,7 +31,7 @@ typedef struct {
 } hid_usage_t;
 
 typedef struct {
-	uint8_t id;
+	uint16_t id;
 	std::string name;
 	std::vector<hid_usage_t> usage;
 } hid_usage_page_t;

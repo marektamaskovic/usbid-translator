@@ -15,7 +15,7 @@ public:
 	USBIDs(const std::string& filepath = "/usr/share/hwdata/usb.ids");
 
 	std::string idToString(uint16_t vid, uint16_t pid);
-	std::string interfaceToString(uint8_t c, uint8_t s, uint8_t p);
+	std::string interfaceToString(uint16_t c, uint16_t s, uint16_t p);
 
 private:
 	int parseStream(const std::string &);
