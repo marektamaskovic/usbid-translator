@@ -271,6 +271,32 @@ int USBIDs::parseHutPage(const std::string &line){
 	return 0;
 }
 
+template <typename T>
+int insertInto(const std::string &line, const std::string &fmt_line, T &output) {
+	std::string name;
+	uint32_t id;
+	// hid_usage_t *h_usage = new hid_usage_t;
+	T item;
+
+	std::sscanf(line.c_str(), fmt_line.c_str(), &id);
+	name = line.substr(6);
+
+	item.name = name;
+	// converting from 32bit to 16bit integer;
+	item.id = (id & 0x0000ffff);
+
+	// this->usb_info.hid_usage_pages.back().usage.push_back(*h_usage);
+	output.push_back(item);
+	// std::cout << "H_Page: "
+	// 		  << std::hex
+	// 		  << (uint32_t)h_usage->id
+	// 		  << "  "
+	// 		  << h_usage->name
+	// 		  << std::endl;
+	// delete h_usage;
+	return 0;
+}
+
 int USBIDs::parseHutUsage(const std::string &line){
 	std::string name;
 	uint32_t id;
