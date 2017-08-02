@@ -7,7 +7,7 @@
 ###
 
 CXX=g++
-CXXFLAGS=-Wall -Wextra -pedantic -std=c++17 -g3 -fdiagnostics-color=always
+CXXFLAGS=-Wall -Wextra -pedantic -std=c++11 -g3 -fdiagnostics-color=always
 
 BIN=USBID-parser
 OBJECTS= main.o USBIDs.o
