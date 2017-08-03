@@ -14,7 +14,8 @@ Second number represents product ID.
 
 ## Interface
 
-Format: 3 bytes, separated by a colon; `0000:0000:0000` ... `ffff:ffff:ffff`
+Format: Three 16bit numbers
+, separated by a colon; `0000:0000:0000` ... `ffff:ffff:ffff`
 
 First number represents interface class.
 Second number represents interface subclass.
@@ -28,7 +29,7 @@ Third number represents interface protocol.
    USBIDs(const std::string& filepath = "/usr/share/hwdata/usb.ids");
 
    std::string idToString(uint16_t vid, uint16_t pid);
-   std::string interfaceToString(uint16_t c, uint16_t s, uint16_t p);
+   std::string interfaceToString(uint8_t c, uint8_t s, uint8_t p);
  };
  ```
 

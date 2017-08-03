@@ -22,7 +22,12 @@ int insertInto(T &output, const std::string &line, const std::string &fmt_line, 
 	// converting from 32bit to 16bit integer;
 	item.id = (id & 0x0000ffff); // TODO parametrize this boyo
 
-	output.push_back(item);
+	try{
+		output.push_back(item);
+	}
+	catch(std::exception &e){
+		std::cout << e.what() <<std::endl;
+	}
 	return 0;
 }
 
@@ -32,12 +37,11 @@ public:
 	USBIDs(const std::string& filepath = "/usr/share/hwdata/usb.ids");
 
 	std::string idToString(uint16_t vid, uint16_t pid);
-	std::string interfaceToString(uint16_t c, uint16_t s, uint16_t p);
+	std::string interfaceToString(uint8_t c, uint8_t s, uint8_t p);
 
 private:
 	int parseStream(const std::string &);
 
-	std::vector<vendor_t> vendor_list;
 	usb_ids_t usb_info;
 };
 
