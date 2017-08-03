@@ -104,32 +104,28 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		if (std::regex_search(line, vendor_line)) {
 			// std::cout << "vendor: '" << line << "'" << std::endl;
-			// vendor_flag = true;
-			parseVendor(this->vendor_list, line);
-			// std::cout << std::hex << (uint32_t)this->vendor_list.back().id
-			// 		  << "  " << this->vendor_list.back().name << std::endl;
+			// parseVendor(this->vendor_list, line);
+			insertInto( this->usb_info.vendors,
+						line,
+						"%x  %*s\n",
+						5);
 		}
 		else if(std::regex_search(line, device_line)){
 			// std::cout << "device: '" << line << "'" << std::endl;
-			parseDevice(this->vendor_list, line);
-			// std::cout << std::hex
-			// 		  << "\t"
-			// 		  << (uint32_t)this->vendor_list.back().devices.back().id
-			// 		  << "  "
-			// 		  << this->vendor_list.back().devices.back().name
-			// 		  << std::endl;
+			// parseDevice(this->vendor_list, line);
+			insertInto( this->usb_info.vendors.back().devices,
+						line,
+						"\t%x  %*s\n",
+						6);
 		}
 		else if(std::regex_search(line, interface_line)){
 			// std::cout << "interface: '" << line << "'" << std::endl;
-			parseInterface(this->vendor_list, line);
-			// std::cout << std::hex
-			// 		  << "\t\t"
-			// 		  << (uint32_t)this->vendor_list.back().devices.back().interfaces.back().id
-			// 		  << "  "
-			// 		  << this->vendor_list.back().devices.back().interfaces.back().name
-			// 		  << std::endl;
+			// parseInterface(this->vendor_list, line);
+			insertInto(	this->usb_info.vendors.back().devices.back().interfaces,
+						line,
+						"\t\t%x  %*s\n",
+						6);
 		}
-		// TIP try macro
 		else if(std::regex_search(line, c_name)){
 			last_language = false;
 			// std::cout << "c_name: '" << line << "'" << std::endl;
@@ -142,11 +138,19 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(std::regex_search(line, hut_page)){
 			// std::cout << "hut_page: '" << line << "'" << std::endl;
-			parseHutPage(line);
+			// parseHutPage(line);
+			insertInto( this->usb_info.hid_usage_pages,
+						line,
+						"HUT %x  %*s\n",
+						8);
 		}
 		else if(std::regex_search(line, hut_usage)){
 			// std::cout << "hut_usage: '" << line << "'" << std::endl;
-			parseHutUsage(line);
+			// parseHutUsage(line);
+			insertInto( this->usb_info.hid_usage_pages.back().usage,
+						line,
+						"\t%x  %*s\n",
+						6);
 		}
 		else if(std::regex_search(line, at)){
 			// std::cout << "at: '" << line << "'" << std::endl;
@@ -184,138 +188,10 @@ int USBIDs::parseStream(const std::string& filepath){
 	file.close();
 	return 0;
 }
+
 #else
 int USBIDs::parseStream(const std::string& filepath){
 	//use reimplement w/ PEGTL parser.
 	return 0;
 }
 #endif
-
-// TIP use template
-int USBIDs::parseVendor(std::vector<vendor_t> &vendor_list, const std::string &line){
-	std::string name;
-	uint32_t id;
-	vendor_t *vendor = new vendor_t;
-	(void) vendor_list;
-
-	std::sscanf(line.c_str(), "%x  %*s\n", &id);
-	name = line.substr(5);
-
-	vendor->name = name;
-	// converting from 32bit to 16bit integer;
-	vendor->id = (id & 0x0000ffff);
-
-	this->usb_info.vendors.push_back(*vendor);
-	delete vendor;
-	return 0;
-}
-
-int USBIDs::parseDevice(std::vector<vendor_t> &vendor_list, const std::string &line){
-	// char name[120];
-	std::string name;
-	uint32_t id;
-	device_t *device = new device_t;
-	(void) vendor_list;
-
-	std::sscanf(line.c_str(), "\t%x  %*s\n", &id);
-	name = line.substr(6);
-
-	device->name = name;
-	// converting from 32bit to 16bit integer;
-	device->id = (id & 0x0000ffff);
-
-	this->usb_info.vendors.back().devices.push_back(*device);
-	delete device;
-	return 0;
-}
-
-int USBIDs::parseInterface(std::vector<vendor_t> &vendor_list, const std::string &line){
-	// char name[120];
-	std::string name;
-	uint32_t id;
-	interface_t *interface = new interface_t;
-	(void) vendor_list;
-
-	std::sscanf(line.c_str(), "\t%x  %*s\n", &id);
-	name = line.substr(6);
-
-	interface->name = name;
-	// converting from 32bit to 16bit integer;
-	interface->id = (id & 0x0000ffff);
-
-	this->usb_info.vendors.back().devices.back().interfaces.push_back(*interface);
-	delete interface;
-	return 0;
-}
-
-int USBIDs::parseHutPage(const std::string &line){
-	std::string name;
-	uint32_t id;
-	hid_usage_page_t *h_page = new hid_usage_page_t;
-
-	std::sscanf(line.c_str(), "HUT %x  %*s\n", &id);
-	name = line.substr(8);
-
-	h_page->name = name;
-	// converting from 32bit to 16bit integer;
-	h_page->id = (id & 0x0000ffff);
-
-	this->usb_info.hid_usage_pages.push_back(*h_page);
-	// std::cout << "H_Page: "
-	// 		  << std::hex
-	// 		  << (uint32_t)h_page->id
-	// 		  << "  "
-	// 		  << h_page->name
-	// 		  << std::endl;
-	delete h_page;
-	return 0;
-}
-
-template <typename T>
-int insertInto(const std::string &line, const std::string &fmt_line, T &output) {
-	std::string name;
-	uint32_t id;
-	// hid_usage_t *h_usage = new hid_usage_t;
-	T item;
-
-	std::sscanf(line.c_str(), fmt_line.c_str(), &id);
-	name = line.substr(6);
-
-	item.name = name;
-	// converting from 32bit to 16bit integer;
-	item.id = (id & 0x0000ffff);
-
-	// this->usb_info.hid_usage_pages.back().usage.push_back(*h_usage);
-	output.push_back(item);
-	// std::cout << "H_Page: "
-	// 		  << std::hex
-	// 		  << (uint32_t)h_usage->id
-	// 		  << "  "
-	// 		  << h_usage->name
-	// 		  << std::endl;
-	// delete h_usage;
-	return 0;
-}
-
-int USBIDs::parseHutUsage(const std::string &line){
-	std::string name;
-	uint32_t id;
-	hid_usage_t *h_usage = new hid_usage_t;
-
-	std::sscanf(line.c_str(), "\t%x  %*s\n", &id);
-	name = line.substr(6);
-
-	h_usage->name = name;
-	// converting from 32bit to 16bit integer;
-	h_usage->id = (id & 0x0000ffff);
-
-	this->usb_info.hid_usage_pages.back().usage.push_back(*h_usage);
-	// std::cout << "H_Page: "
-	// 		  << std::hex
-	// 		  << (uint32_t)h_usage->id
-	// 		  << "  "
-	// 		  << h_usage->name
-	// 		  << std::endl;
-	delete h_usage;
-	return 0;
-}

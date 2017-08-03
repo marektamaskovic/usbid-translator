@@ -9,6 +9,23 @@
 
 #include "parser.hpp"
 
+template <typename T>
+int insertInto(T &output, const std::string &line, const std::string &fmt_line, const unsigned prefix_len) {
+	std::string name;
+	uint32_t id;
+	typename T::value_type item;
+
+	std::sscanf(line.c_str(), fmt_line.c_str(), &id);
+	name = line.substr(prefix_len);
+
+	item.name = name;
+	// converting from 32bit to 16bit integer;
+	item.id = (id & 0x0000ffff); // TODO parametrize this boyo
+
+	output.push_back(item);
+	return 0;
+}
+
 class USBIDs
 {
 public:
@@ -19,12 +36,6 @@ public:
 
 private:
 	int parseStream(const std::string &);
-	int parseVendor(std::vector<vendor_t> &, const std::string &);
-	int parseDevice(std::vector<vendor_t> &, const std::string &);
-	int parseInterface(std::vector<vendor_t> &, const std::string &);
-	int parseHutPage(const std::string &);
-	int parseHutUsage(const std::string &);
-
 
 	std::vector<vendor_t> vendor_list;
 	usb_ids_t usb_info;
