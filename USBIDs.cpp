@@ -195,3 +195,5 @@ int USBIDs::parseStream(const std::string& filepath){
 	return 0;
 }
 #endif
+
+/* vim: set ts=4 sw=4 tw=0 noet : */

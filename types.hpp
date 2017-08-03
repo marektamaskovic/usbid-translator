@@ -42,3 +42,5 @@ typedef struct {
 } usb_ids_t;
 
 #endif
+
+/* vim: set ts=4 sw=4 tw=0 noet : */
