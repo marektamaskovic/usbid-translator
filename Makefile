@@ -19,10 +19,10 @@ run:
 	./$(BIN)
 
 run_id:
-	./$(BIN) id 0 0
+	./$(BIN) id 0x1 0x1
 
 run_inter:
-	./$(BIN) interface 0 0 0
+	./$(BIN) interface 0x1 0x1 0x1
 
 clean: clear
 

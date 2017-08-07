@@ -97,6 +97,9 @@ int USBIDs::parseStream(const std::string& filepath){
 	bool last_language = false;
 	uint64_t line_num = 0; // underflow
 
+	bool vendor_parsed = false, device_parsed = false, interface_parsed = false;
+
+
 	while(file.good()){
 		line_num++;
 		std::getline(file, line);
@@ -106,27 +109,39 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		if (std::regex_search(line, vendor_line)) {
 			// std::cout << "vendor: '" << line << "'" << std::endl;
-			// parseVendor(this->vendor_list, line);
 			insertInto( this->usb_info.vendors,
 						line,
 						"%x  %*s\n",
 						5);
+			vendor_parsed = true;
+			device_parsed = false;
+			interface_parsed = false;
 		}
 		else if(std::regex_search(line, device_line)){
 			// std::cout << "device: '" << line << "'" << std::endl;
-			// parseDevice(this->vendor_list, line);
+			if(!vendor_parsed){
+				// FIXME
+				std::cerr << line_num << ": Err" << std::endl;
+			}
 			insertInto( this->usb_info.vendors.back().devices,
 						line,
 						"\t%x  %*s\n",
 						6);
+			device_parsed = true;
+			interface_parsed = false;
 		}
 		else if(std::regex_search(line, interface_line)){
 			// std::cout << "interface: '" << line << "'" << std::endl;
 			// parseInterface(this->vendor_list, line);
+			if(!vendor_parsed || !device_parsed){
+				// FIXME
+				std::cerr << line_num << ": Err" << std::endl;
+			}
 			insertInto(	this->usb_info.vendors.back().devices.back().interfaces,
 						line,
 						"\t\t%x  %*s\n",
 						6);
+			interface_parsed = true;
 		}
 		else if(std::regex_search(line, c_name)){
 			last_language = false;
@@ -135,6 +150,9 @@ int USBIDs::parseStream(const std::string& filepath){
 						line,
 						"C %x  %*s\n",
 						6);
+			c_name_parsed = true;
+			c_subname_parsed = false;
+			c_protocol_parsed = false;
 		}
 		else if(!last_language && std::regex_search(line, c_subname)){
 			// std::cout << "c_subname: '" << line << "'" << std::endl;
@@ -142,6 +160,8 @@ int USBIDs::parseStream(const std::string& filepath){
 						line,
 						"\t%x  %*s",
 						5);
+			c_subname_parsed = true;
+			c_protocol_parsed = false;
 		}
 		else if(std::regex_search(line, c_protocol)){
 			// std::cout << "c_protocol: '" << line << "'" << std::endl;
@@ -150,6 +170,8 @@ int USBIDs::parseStream(const std::string& filepath){
 						line,
 						"\t\t%x  %*s",
 						6);
+			c_protocol_parsed = true;
+
 		}
 		else if(std::regex_search(line, hut_page)){
 			// std::cout << "hut_page: '" << line << "'" << std::endl;
@@ -239,7 +261,7 @@ int USBIDs::parseStream(const std::string& filepath){
 						  << "Syntax error"
 						  << std::endl;
 				// TODO
-				// FIXME nejaky goto;
+				// FIXME some goto;
 			}
 		}
 

@@ -5,101 +5,98 @@
 #include <string>
 #include <vector>
 
-// WARNING
-// uint16_t instead of uint8_t cause 4 numbers! Error in gist!
-
-typedef struct {
+struct interface_t{
 	uint16_t id;
 	std::string name;
-} interface_t;
+};
 
-typedef struct {
+struct device_t{
 	uint16_t id;
 	std::string name;
 	std::vector<interface_t> interfaces;
-} device_t;
+};
 
-typedef struct {
+struct vendor_t{
 	uint16_t id;
 	std::string name;
 	std::vector<device_t> devices;
-} vendor_t;
+};
 
-typedef struct {
+struct hid_usage_t{
 	uint16_t id;
 	std::string name;
-} hid_usage_t;
+};
 
-typedef struct {
+struct hid_usage_page_t{
 	uint16_t id;
 	std::string name;
 	std::vector<hid_usage_t> usage;
-} hid_usage_page_t;
+};
 
-typedef struct {
+struct protocol_t{
 	uint8_t id;
 	std::string name;
-} protocol_t;
+};
 
-typedef struct {
+struct subclass_t{
 	uint8_t id;
 	std::string name;
 	std::vector<protocol_t> protocol;
-} subclass_t;
+};
 
-typedef struct {
+struct dev_class_t{
 	uint8_t id;
 	std::string name;
 	std::vector<subclass_t> subclass;
-} dev_class_t;
+};
 
-typedef struct {
+struct actt_t{
 	uint16_t id;
 	std::string name;
-} actt_t;
+};
 
-typedef struct {
+struct hid_desc_t{
 	uint8_t id;
 	std::string name;
-} hid_desc_t;
+};
 
-typedef struct {
+struct hid_item_t{
 	uint8_t id;
 	std::string name;
-} hid_item_t;
+};
 
-typedef struct {
+struct bias_t{
 	uint8_t id;
 	std::string name;
-} bias_t;
+};
 
-typedef struct {
+struct phy_item_t{
 	uint8_t id;
 	std::string name;
-} phy_item_t;
+};
 
-typedef struct {
+struct dialect_t{
 	uint8_t id;
 	std::string name;
-} dialect_t;
+};
 
-typedef struct {
+struct lang_t{
 	uint16_t id;
 	std::string name;
 	std::vector<dialect_t> dialects;
-} lang_t;
+};
 
-typedef struct {
+struct hid_country_code_t{
 	uint8_t id;
 	std::string name;
-} hid_country_code_t;
+};
 
-typedef struct {
+struct vctt_t{
 	uint16_t id;
 	std::string name;
-} vctt_t;
+};
 
-typedef struct {
+struct usb_ids_t{
 	std::vector<vendor_t> vendors;
 	std::vector<dev_class_t> dev_class;
 	std::vector<actt_t> actt;
@@ -111,7 +108,7 @@ typedef struct {
 	std::vector<lang_t> lang;
 	std::vector<hid_country_code_t> hid_country;
 	std::vector<vctt_t> vctt;
-} usb_ids_t;
+};
 
 
 #endif
