@@ -20,6 +20,19 @@ int main(int argc, char *argv[]){
 		std::cout << output << std::endl;
 		delete a;
 	}
+	if(argc == 4 && static_cast<std::string>(argv[1]) == "usage"){
+		//--------------------------------------------
+		// WARNING WARNING WARNING WARNING WARNING
+		//--------------------------------------------
+		uint16_t page = static_cast<uint16_t>(std::stoi(argv[2], 0, 16));
+		uint16_t u_code = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
+		//--------------------------------------------
+
+		class USBIDs *a = new class USBIDs("./content");
+		std::string output = a->usageToString(page, u_code);
+		std::cout << output << std::endl;
+		delete a;
+	}
 	else if(argc == 5 && static_cast<std::string>(argv[1]) == "interface"){
 		//--------------------------------------------
 		// WARNING WARNING WARNING WARNING WARNING
@@ -39,7 +52,8 @@ int main(int argc, char *argv[]){
 				  << "Usage:" << std::endl
 				  << "USBID-parser [OPTION] args" << std::endl
 				  << "    id\t\tVID PID\t\t " << std::endl
-				  << "    interface\tC S P\t" << std::endl;
+				  << "    interface\tC S P\t" << std::endl
+				  << "    usage\tVID PID\t\t " << std::endl;
 	}
 
 

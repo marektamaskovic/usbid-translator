@@ -28,7 +28,7 @@ struct hid_usage_t{
 };
 
 struct hid_usage_page_t{
-	uint16_t id;
+	uint8_t id;
 	std::string name;
 	std::vector<hid_usage_t> usage;
 };

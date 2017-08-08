@@ -2,3 +2,8 @@ USBID-parser
 *.o
 content
 out
+*.gcda
+*.gcno
+*.info
+html
+html/*

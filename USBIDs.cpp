@@ -47,23 +47,23 @@ USBIDs::USBIDs(const std::string& filepath){
 	file.close();
 }
 
-std::string USBIDs::usageToString(uint16_t vid, uint16_t pid){
+std::string USBIDs::usageToString(uint8_t page, uint16_t u_code){
 
 	for(auto page_iter = usb_info.hid_usage_pages.begin();
 		page_iter != usb_info.hid_usage_pages.end();
 		++page_iter)
 	{
-		if(page_iter->id == vid && page_iter->usage.size() != 0){
+		if(page_iter->id == page && page_iter->usage.size() != 0){
 			for(auto usage_iter = page_iter->usage.begin();
 				usage_iter != page_iter->usage.end();
 				++usage_iter)
 			{
-				if(usage_iter->id == pid){
+				if(usage_iter->id == u_code){
 					return page_iter->name + "::" + usage_iter->name;
 				}
 			}
 		}
-		else if(page_iter->id == vid && page_iter->usage.size() == 0){
+		else if(page_iter->id == page && page_iter->usage.size() == 0){
 			return page_iter->name;
 		}
 	}

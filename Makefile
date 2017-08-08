@@ -19,15 +19,24 @@ run:
 	./$(BIN)
 
 run_id:
+	./$(BIN) id 0x1 0x7778
 	./$(BIN) id 0x1 0x1
+	./$(BIN) id 0x2002 0x0
 
 run_inter:
 	./$(BIN) interface 0x1 0x1 0x1
+	./$(BIN) interface 0x0 0x1 0x1
+	./$(BIN) interface 0x2 0x2 0x1
 
-run_cov: run_id run_inter
+run_usage:
+	./$(BIN) usage 0x00 0x000
+	./$(BIN) usage 0x01 0x001
+	./$(BIN) usage 0xfe 0x001
+
+run_cov: run_id run_inter run_usage
 	./$(BIN) --help
 
-coverage: CXXFLAGS += -fprofile-arcs -ftest-coverage
+coverage: CXXFLAGS += --coverage
 coverage: all run_cov
 	lcov --capture --directory ./ --output-file coverage.info
 	genhtml coverage.info --output-directory=./html
