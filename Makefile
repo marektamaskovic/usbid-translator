@@ -24,7 +24,16 @@ run_id:
 run_inter:
 	./$(BIN) interface 0x1 0x1 0x1
 
+run_cov: run_id run_inter
+	./$(BIN) --help
+
+coverage: CXXFLAGS += -fprofile-arcs -ftest-coverage
+coverage: all run_cov
+	lcov --capture --directory ./ --output-file coverage.info
+	genhtml coverage.info --output-directory=./html
+
 clean: clear
 
 clear:
-	rm *.o $(BIN)
+	rm *.o $(BIN) *.gcda *.gcno coverage.info
+	rm -rf ./html

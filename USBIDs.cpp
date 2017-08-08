@@ -47,7 +47,7 @@ USBIDs::USBIDs(const std::string& filepath){
 	file.close();
 }
 
-std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
+std::string USBIDs::usageToString(uint16_t vid, uint16_t pid){
 
 	for(auto page_iter = usb_info.hid_usage_pages.begin();
 		page_iter != usb_info.hid_usage_pages.end();
@@ -71,35 +71,23 @@ std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
 	return "Not found!";
 }
 
-std::string USBIDs::interfaceToString(uint8_t c, uint8_t s, uint8_t p){
+std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
 
 	for(auto vendor_it = usb_info.vendors.begin();
 		vendor_it != usb_info.vendors.end();
 		++vendor_it)
 	{
-		if(vendor_it->id == c && vendor_it->devices.size() != 0){
+		if(vendor_it->id == vid && vendor_it->devices.size() != 0){
 			for(auto device_it = vendor_it->devices.begin();
 				device_it != vendor_it->devices.end();
 				++device_it)
 			{
-				if(device_it->id == s && device_it->interfaces.size() != 0){
-					for(auto interface_it = device_it->interfaces.begin();
-						interface_it != device_it->interfaces.end();
-						++interface_it)
-					{
-						if(interface_it->id == p){
-							return vendor_it->name
-								   + "::" + device_it->name
-								   + "::" + interface_it->name;
-						}
-					}
-				}
-				else if(device_it->id == s && device_it->interfaces.size() == 0){
+				if(device_it->id == pid){
 					return vendor_it->name + "::" + device_it->name;
 				}
 			}
 		}
-		else if(vendor_it->id == c && vendor_it->devices.size() == 0){
+		else if(vendor_it->id == vid && vendor_it->devices.size() == 0){
 			return vendor_it->name;
 		}
 
@@ -107,6 +95,43 @@ std::string USBIDs::interfaceToString(uint8_t c, uint8_t s, uint8_t p){
 
 	return "Not found";
 }
+
+std::string USBIDs::interfaceToString(uint8_t c, uint8_t s, uint8_t p){
+
+	for(auto name_it = usb_info.dev_class.begin();
+		name_it != usb_info.dev_class.end();
+		++name_it)
+	{
+		if(name_it->id == c && name_it->subclass.size() != 0){
+			for(auto subname_it = name_it->subclass.begin();
+				subname_it != name_it->subclass.end();
+				++subname_it)
+			{
+				if(subname_it->id == s && subname_it->protocol.size() != 0){
+					for(auto protocol_it = subname_it->protocol.begin();
+						protocol_it != subname_it->protocol.end();
+						++protocol_it)
+					{
+						if(protocol_it->id == p){
+							return	name_it->name + "::"
+									+ subname_it->name + "::"
+									+ protocol_it->name;
+						}
+					}
+				}
+				else if(subname_it->id == s && subname_it->protocol.size() == 0){
+					return name_it->name + "::" + subname_it->name;
+				}
+			}
+		}
+		else if(name_it->id == c && name_it->subclass.size() == 0){
+			return name_it->name;
+		}
+	}
+
+	return "Not found";
+}
+
 
 #if 1
 int USBIDs::parseStream(const std::string& filepath){
@@ -155,7 +180,7 @@ int USBIDs::parseStream(const std::string& filepath){
 			insertInto( this->usb_info.vendors,
 						line,
 						"%x  %*s\n",
-						5);
+						6);
 			setSwitches(1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0);
 		}
 		else if(device_sw && std::regex_search(line, device_line)){
@@ -163,7 +188,7 @@ int USBIDs::parseStream(const std::string& filepath){
 			insertInto( this->usb_info.vendors.back().devices,
 						line,
 						"\t%x  %*s\n",
-						6);
+						7);
 			setSwitches(1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0);
 		}
 		else if(interface_sw && std::regex_search(line, interface_line)){
