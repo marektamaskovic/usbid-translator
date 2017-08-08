@@ -1,5 +1,45 @@
 #include "USBIDs.hpp"
 
+#define initSwitches(val) do{						\
+								vendor_sw = true;	\
+								device_sw = val;	\
+								interface_sw = val;	\
+								name_sw = val;		\
+								subname_sw = val;	\
+								protocol_sw = val;	\
+								at_sw = val;		\
+								hid_sw = val;		\
+								r_sw = val;			\
+								bias_sw = val;		\
+								phy_sw = val;		\
+								page_sw = val;		\
+								usage_sw = val;		\
+								lang_sw = val;		\
+								dial_sw = val;		\
+								hcc_sw = val;		\
+								vt_sw = val;		\
+							}while(0)
+
+#define setSwitches(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q) do{	\
+								vendor_sw = a;				\
+								device_sw = b;				\
+								interface_sw = c;			\
+								name_sw = d;				\
+								subname_sw = e;				\
+								protocol_sw = f;			\
+								at_sw = g;					\
+								hid_sw = h;					\
+								r_sw = i;					\
+								bias_sw = j;				\
+								phy_sw = k;					\
+								page_sw = l;				\
+								usage_sw = m;				\
+								lang_sw = n;				\
+								dial_sw = o;				\
+								hcc_sw = p;					\
+								vt_sw = q;					\
+							}while(0)
+
 USBIDs::USBIDs(const std::string& filepath){
 
 	std::fstream file {filepath};
@@ -97,8 +137,11 @@ int USBIDs::parseStream(const std::string& filepath){
 	bool last_language = false;
 	uint64_t line_num = 0; // underflow
 
-	bool vendor_parsed = false, device_parsed = false, interface_parsed = false;
+	bool vendor_sw, device_sw, interface_sw, name_sw, subname_sw, protocol_sw,
+		 at_sw, hid_sw, r_sw, bias_sw, phy_sw, page_sw, usage_sw, lang_sw,
+		 dial_sw, hcc_sw, vt_sw;
 
+	initSwitches(false);
 
 	while(file.good()){
 		line_num++;
@@ -107,151 +150,146 @@ int USBIDs::parseStream(const std::string& filepath){
 			// std::cout << "comment: '" << line << "'" << std::endl;
 			continue;
 		}
-		if (std::regex_search(line, vendor_line)) {
+		if (vendor_sw && std::regex_search(line, vendor_line)) {
 			// std::cout << "vendor: '" << line << "'" << std::endl;
 			insertInto( this->usb_info.vendors,
 						line,
 						"%x  %*s\n",
 						5);
-			vendor_parsed = true;
-			device_parsed = false;
-			interface_parsed = false;
+			setSwitches(1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0);
 		}
-		else if(std::regex_search(line, device_line)){
+		else if(device_sw && std::regex_search(line, device_line)){
 			// std::cout << "device: '" << line << "'" << std::endl;
-			if(!vendor_parsed){
-				// FIXME
-				std::cerr << line_num << ": Err" << std::endl;
-			}
 			insertInto( this->usb_info.vendors.back().devices,
 						line,
 						"\t%x  %*s\n",
 						6);
-			device_parsed = true;
-			interface_parsed = false;
+			setSwitches(1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0);
 		}
-		else if(std::regex_search(line, interface_line)){
+		else if(interface_sw && std::regex_search(line, interface_line)){
 			// std::cout << "interface: '" << line << "'" << std::endl;
 			// parseInterface(this->vendor_list, line);
-			if(!vendor_parsed || !device_parsed){
-				// FIXME
-				std::cerr << line_num << ": Err" << std::endl;
-			}
 			insertInto(	this->usb_info.vendors.back().devices.back().interfaces,
 						line,
 						"\t\t%x  %*s\n",
 						6);
-			interface_parsed = true;
+			setSwitches(1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0);
 		}
-		else if(std::regex_search(line, c_name)){
+		else if(name_sw && std::regex_search(line, c_name)){
 			last_language = false;
 			// std::cout << "c_name: '" << line << "'" << std::endl;
 			insertInto( this->usb_info.dev_class,
 						line,
 						"C %x  %*s\n",
 						6);
-			c_name_parsed = true;
-			c_subname_parsed = false;
-			c_protocol_parsed = false;
+			setSwitches(0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0);
 		}
-		else if(!last_language && std::regex_search(line, c_subname)){
+		else if(subname_sw && !last_language && std::regex_search(line, c_subname)){
 			// std::cout << "c_subname: '" << line << "'" << std::endl;
 			insertInto( this->usb_info.dev_class.back().subclass,
 						line,
 						"\t%x  %*s",
 						5);
-			c_subname_parsed = true;
-			c_protocol_parsed = false;
+			setSwitches(0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0);
 		}
-		else if(std::regex_search(line, c_protocol)){
+		else if(protocol_sw && std::regex_search(line, c_protocol)){
 			// std::cout << "c_protocol: '" << line << "'" << std::endl;
-			// FIXME check if back() is a good iterator something is not pushing to vector!
 			insertInto( this->usb_info.dev_class.back().subclass.back().protocol,
 						line,
 						"\t\t%x  %*s",
 						6);
-			c_protocol_parsed = true;
-
+			setSwitches(0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0);
 		}
-		else if(std::regex_search(line, hut_page)){
+		else if(at_sw && std::regex_search(line, at)){
+			// std::cout << "at: '" << line << "'" << std::endl;
+			insertInto( this->usb_info.actt,
+						line,
+						"AT %x  %*s\n",
+						9);
+			setSwitches(0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0);
+		}
+		else if(hid_sw && std::regex_search(line, hid)){
+			// std::cout << "hid: '" << line << "'" << std::endl;
+			insertInto( this->usb_info.hid_desc,
+						line,
+						"HID %x  %*s\n",
+						8);
+			setSwitches(0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0);
+		}
+		else if(r_sw && std::regex_search(line, r)){
+			// std::cout << "r: '" << line << "'" << std::endl;
+			insertInto( this->usb_info.hid_item,
+						line,
+						"R %x  %*s\n",
+						6);
+			setSwitches(0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0);
+		}
+		else if(bias_sw && std::regex_search(line, bias)){
+			// std::cout << "bias: '" << line << "'" << std::endl;
+			insertInto( this->usb_info.bias,
+						line,
+						"BIAS %x  %*s\n",
+						8);
+			setSwitches(0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0);
+		}
+		else if(phy_sw && std::regex_search(line, phy)){
+			// std::cout << "phy: '" << line << "'" << std::endl;
+			insertInto( this->usb_info.phy_item,
+						line,
+						"PHY %x  %*s\n",
+						8);
+			setSwitches(0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0);
+		}
+		else if(page_sw && std::regex_search(line, hut_page)){
 			// std::cout << "hut_page: '" << line << "'" << std::endl;
 			// parseHutPage(line);
 			insertInto( this->usb_info.hid_usage_pages,
 						line,
 						"HUT %x  %*s\n",
 						8);
+			setSwitches(0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0);
 		}
-		else if(std::regex_search(line, hut_usage)){
+		else if(usage_sw && std::regex_search(line, hut_usage)){
 			// std::cout << "hut_usage: '" << line << "'" << std::endl;
 			// parseHutUsage(line);
 			insertInto( this->usb_info.hid_usage_pages.back().usage,
 						line,
 						"\t%x  %*s\n",
 						6);
+			setSwitches(0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0);
 		}
-		else if(std::regex_search(line, at)){
-			// std::cout << "at: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.actt,
-						line,
-						"AT %x  %*s\n",
-						9);
-		}
-		else if(std::regex_search(line, hid)){
-			// std::cout << "hid: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.hid_desc,
-						line,
-						"HID %x  %*s\n",
-						8);
-		}
-		else if(std::regex_search(line, r)){
-			// std::cout << "r: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.hid_item,
-						line,
-						"R %x  %*s\n",
-						6);
-		}
-		else if(std::regex_search(line, bias)){
-			// std::cout << "bias: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.bias,
-						line,
-						"BIAS %x  %*s\n",
-						8);
-		}
-		else if(std::regex_search(line, phy)){
-			// std::cout << "phy: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.phy_item,
-						line,
-						"PHY %x  %*s\n",
-						8);
-		}
-		else if(std::regex_search(line, l_language)){
+		else if(lang_sw && std::regex_search(line, l_language)){
 			// std::cout << "l_language: '" << line << "'" << std::endl;
 			insertInto( this->usb_info.lang,
 						line,
 						"L %x  %*s\n",
 						8);
 			last_language = true;
+			setSwitches(0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0);
 		}
-		else if(std::regex_search(line, l_dialect)){
+		else if(dial_sw && std::regex_search(line, l_dialect)){
 			// std::cout << "l_dialect: '" << line << "'" << std::endl;
 			insertInto( this->usb_info.lang.back().dialects,
 						line,
 						"\t%x  %*s\n",
 						5);
+			setSwitches(0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0);
 		}
-		else if(std::regex_search(line, hcc)){
+		else if(hcc_sw && std::regex_search(line, hcc)){
 			// std::cout << "hcc: '" << line << "'" << std::endl;
 			insertInto( this->usb_info.hid_country,
 						line,
 						"HCC %x  %*s\n",
 						8);
+			setSwitches(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1);
 		}
-		else if(std::regex_search(line, vt)){
+		else if(vt_sw && std::regex_search(line, vt)){
 			// std::cout << "vt: '" << line << "'" << std::endl;
 			insertInto( this->usb_info.vctt,
 						line,
 						"VT %x  %*s\n",
 						9);
+			setSwitches(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1);
 		}
 		else{
 			// std::cout <<"nope: '" << line << "'" <<std::endl;
