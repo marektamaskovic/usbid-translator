@@ -40,12 +40,34 @@
 								vt_sw = q;					\
 							}while(0)
 
-USBIDs::USBIDs(const std::string& filepath){
 
-	std::fstream file {filepath};
-	this->parseStream(filepath);
-	file.close();
+template <typename T>
+int insertInto(T &output, const std::string &line, const std::string &fmt_line, const unsigned prefix_len) {
+	std::string name;
+	uint32_t id;
+	typename T::value_type item;
+
+	std::sscanf(line.c_str(), fmt_line.c_str(), &id);
+	name = line.substr(prefix_len);
+
+	item.name = name;
+	// converting from 32bit to 16bit integer;
+	item.id = (id & 0x0000ffff); // TODO parametrize this boyo
+
+	try{
+		output.push_back(item);
+	}
+	catch(std::bad_alloc &e){
+		std::cout << e.what() <<std::endl;
+	}
+	return 0;
 }
+
+
+USBIDs::USBIDs(const std::string& filepath){
+	this->parseStream(filepath);
+}
+
 
 std::string USBIDs::usageToString(uint8_t page, uint16_t u_code){
 
@@ -70,6 +92,7 @@ std::string USBIDs::usageToString(uint8_t page, uint16_t u_code){
 
 	return "Not found!";
 }
+
 
 std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
 
@@ -96,10 +119,11 @@ std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
 	return "Not found";
 }
 
+
 std::string USBIDs::interfaceToString(uint8_t c, uint8_t s, uint8_t p){
 
-	for(auto name_it = usb_info.dev_class.begin();
-		name_it != usb_info.dev_class.end();
+	for(auto name_it = this->usb_info.dev_class.begin();
+		name_it != this->usb_info.dev_class.end();
 		++name_it)
 	{
 		if(name_it->id == c && name_it->subclass.size() != 0){
@@ -168,6 +192,8 @@ int USBIDs::parseStream(const std::string& filepath){
 
 	initSwitches(false);
 
+	usb_ids_t ref_struct;
+
 	while(file.good()){
 		line_num++;
 		std::getline(file, line);
@@ -177,7 +203,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		if (vendor_sw && std::regex_search(line, vendor_line)) {
 			// std::cout << "vendor: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.vendors,
+			insertInto( ref_struct.vendors,
 						line,
 						"%x  %*s\n",
 						6);
@@ -185,7 +211,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(device_sw && std::regex_search(line, device_line)){
 			// std::cout << "device: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.vendors.back().devices,
+			insertInto( ref_struct.vendors.back().devices,
 						line,
 						"\t%x  %*s\n",
 						7);
@@ -194,7 +220,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		else if(interface_sw && std::regex_search(line, interface_line)){
 			// std::cout << "interface: '" << line << "'" << std::endl;
 			// parseInterface(this->vendor_list, line);
-			insertInto(	this->usb_info.vendors.back().devices.back().interfaces,
+			insertInto(	ref_struct.vendors.back().devices.back().interfaces,
 						line,
 						"\t\t%x  %*s\n",
 						6);
@@ -203,7 +229,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		else if(name_sw && std::regex_search(line, c_name)){
 			last_language = false;
 			// std::cout << "c_name: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.dev_class,
+			insertInto( ref_struct.dev_class,
 						line,
 						"C %x  %*s\n",
 						6);
@@ -211,7 +237,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(subname_sw && !last_language && std::regex_search(line, c_subname)){
 			// std::cout << "c_subname: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.dev_class.back().subclass,
+			insertInto( ref_struct.dev_class.back().subclass,
 						line,
 						"\t%x  %*s",
 						5);
@@ -219,7 +245,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(protocol_sw && std::regex_search(line, c_protocol)){
 			// std::cout << "c_protocol: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.dev_class.back().subclass.back().protocol,
+			insertInto( ref_struct.dev_class.back().subclass.back().protocol,
 						line,
 						"\t\t%x  %*s",
 						6);
@@ -227,7 +253,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(at_sw && std::regex_search(line, at)){
 			// std::cout << "at: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.actt,
+			insertInto( ref_struct.actt,
 						line,
 						"AT %x  %*s\n",
 						9);
@@ -235,7 +261,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(hid_sw && std::regex_search(line, hid)){
 			// std::cout << "hid: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.hid_desc,
+			insertInto( ref_struct.hid_desc,
 						line,
 						"HID %x  %*s\n",
 						8);
@@ -243,7 +269,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(r_sw && std::regex_search(line, r)){
 			// std::cout << "r: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.hid_item,
+			insertInto( ref_struct.hid_item,
 						line,
 						"R %x  %*s\n",
 						6);
@@ -251,7 +277,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(bias_sw && std::regex_search(line, bias)){
 			// std::cout << "bias: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.bias,
+			insertInto( ref_struct.bias,
 						line,
 						"BIAS %x  %*s\n",
 						8);
@@ -259,7 +285,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(phy_sw && std::regex_search(line, phy)){
 			// std::cout << "phy: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.phy_item,
+			insertInto( ref_struct.phy_item,
 						line,
 						"PHY %x  %*s\n",
 						8);
@@ -268,7 +294,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		else if(page_sw && std::regex_search(line, hut_page)){
 			// std::cout << "hut_page: '" << line << "'" << std::endl;
 			// parseHutPage(line);
-			insertInto( this->usb_info.hid_usage_pages,
+			insertInto( ref_struct.hid_usage_pages,
 						line,
 						"HUT %x  %*s\n",
 						8);
@@ -277,7 +303,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		else if(usage_sw && std::regex_search(line, hut_usage)){
 			// std::cout << "hut_usage: '" << line << "'" << std::endl;
 			// parseHutUsage(line);
-			insertInto( this->usb_info.hid_usage_pages.back().usage,
+			insertInto( ref_struct.hid_usage_pages.back().usage,
 						line,
 						"\t%x  %*s\n",
 						6);
@@ -285,7 +311,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(lang_sw && std::regex_search(line, l_language)){
 			// std::cout << "l_language: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.lang,
+			insertInto( ref_struct.lang,
 						line,
 						"L %x  %*s\n",
 						8);
@@ -294,7 +320,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(dial_sw && std::regex_search(line, l_dialect)){
 			// std::cout << "l_dialect: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.lang.back().dialects,
+			insertInto( ref_struct.lang.back().dialects,
 						line,
 						"\t%x  %*s\n",
 						5);
@@ -302,7 +328,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(hcc_sw && std::regex_search(line, hcc)){
 			// std::cout << "hcc: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.hid_country,
+			insertInto( ref_struct.hid_country,
 						line,
 						"HCC %x  %*s\n",
 						8);
@@ -310,7 +336,7 @@ int USBIDs::parseStream(const std::string& filepath){
 		}
 		else if(vt_sw && std::regex_search(line, vt)){
 			// std::cout << "vt: '" << line << "'" << std::endl;
-			insertInto( this->usb_info.vctt,
+			insertInto( ref_struct.vctt,
 						line,
 						"VT %x  %*s\n",
 						9);
@@ -319,16 +345,17 @@ int USBIDs::parseStream(const std::string& filepath){
 		else{
 			// std::cout <<"nope: '" << line << "'" <<std::endl;
 			if(line.length() > 0){
-				std::cerr << filepath << ":"
-						  << line_num << ": "
-						  << "Syntax error"
-						  << std::endl;
-				// TODO
-				// FIXME some goto;
+				// std::cerr << filepath << ":"
+				// 		  << line_num << ": "
+				// 		  << "Syntax error"
+				// 		  << std::endl;
+				// return -1;
+				throw syntax_error(filepath + ":" + std::to_string(line_num) + ": " + "Syntax error");
 			}
 		}
 
 	}
+	usb_info = std::move(ref_struct);
 	file.close();
 	return 0;
 }

@@ -28,6 +28,7 @@ Third number represents interface protocol.
  public:
    USBIDs(const std::string& filepath = "/usr/share/hwdata/usb.ids");
 
+   std::string usageToString(uint8_t page, uint16_t u_code);
    std::string idToString(uint16_t vid, uint16_t pid);
    std::string interfaceToString(uint8_t c, uint8_t s, uint8_t p);
  };

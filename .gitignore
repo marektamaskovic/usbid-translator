@@ -1,6 +1,6 @@
 USBID-parser
 *.o
-content
+content*
 out
 *.gcda
 *.gcno

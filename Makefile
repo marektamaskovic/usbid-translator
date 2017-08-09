@@ -7,9 +7,9 @@
 ###
 
 CXX=g++
-CXXFLAGS=-Wall -Wextra -pedantic -std=c++11 -g3 -fdiagnostics-color=always
+CXXFLAGS=-Wall -Wextra -pedantic -std=c++14 -o2 -fdiagnostics-color=always
 
-BIN=USBID-parser
+BIN=USBID-translator
 OBJECTS= main.o USBIDs.o
 
 all: $(OBJECTS)
@@ -35,14 +35,22 @@ run_usage:
 
 run_cov: run_id run_inter run_usage
 	./$(BIN) --help
+	cp content_bad content
+	! ./$(BIN) id 0x1 0x7778
+	! ./$(BIN) interface 0x0 0x1 0x1
+	! ./$(BIN) usage 0x01 0x001
+	cp content_good content
 
 coverage: CXXFLAGS += --coverage
 coverage: all run_cov
 	lcov --capture --directory ./ --output-file coverage.info
 	genhtml coverage.info --output-directory=./html
 
-clean: clear
+clear: clean clear_coverage
 
-clear:
-	rm *.o $(BIN) *.gcda *.gcno coverage.info
+clean:
+	rm *.o $(BIN)
+
+clear_coverage:
+	rm *.gcda *.gcno coverage.info
 	rm -rf ./html

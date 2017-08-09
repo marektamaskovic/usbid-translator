@@ -6,33 +6,13 @@
 #include <iostream>
 #include <regex>
 #include <vector>
+#include <exception>
+#include <stdexcept>
 
 #include "types.hpp"
 
-template <typename T>
-int insertInto(T &output, const std::string &line, const std::string &fmt_line, const unsigned prefix_len) {
-	std::string name;
-	uint32_t id;
-	typename T::value_type item;
 
-	std::sscanf(line.c_str(), fmt_line.c_str(), &id);
-	name = line.substr(prefix_len);
-
-	item.name = name;
-	// converting from 32bit to 16bit integer;
-	item.id = (id & 0x0000ffff); // TODO parametrize this boyo
-
-	try{
-		output.push_back(item);
-	}
-	catch(std::exception &e){
-		std::cout << e.what() <<std::endl;
-	}
-	return 0;
-}
-
-class USBIDs
-{
+class USBIDs{
 public:
 	USBIDs(const std::string& filepath = "/usr/share/hwdata/usb.ids");
 
@@ -42,10 +22,13 @@ public:
 
 private:
 	int parseStream(const std::string &);
-
 	usb_ids_t usb_info;
 };
 
+class syntax_error : public std::runtime_error {
+public:
+	 syntax_error(const std::string &s): std::runtime_error(s) { }
+};
 #endif
 
 /* vim: set ts=4 sw=4 tw=0 noet : */

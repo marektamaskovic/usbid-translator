@@ -15,12 +15,19 @@ int main(int argc, char *argv[]){
 		uint16_t pid = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
 		//--------------------------------------------
 
-		class USBIDs *a = new class USBIDs("./content");
-		std::string output = a->idToString(vid, pid);
-		std::cout << output << std::endl;
-		delete a;
+		// class USBIDs *a = new class USBIDs("./content");
+		try{
+			class USBIDs a("./content");
+			std::string output = a.idToString(vid, pid);
+			std::cout << output << std::endl;
+		}
+		catch(const syntax_error &e){
+			std::cerr << e.what() << std::endl;
+			return 1;
+		}
+		// delete a;
 	}
-	if(argc == 4 && static_cast<std::string>(argv[1]) == "usage"){
+	else if(argc == 4 && static_cast<std::string>(argv[1]) == "usage"){
 		//--------------------------------------------
 		// WARNING WARNING WARNING WARNING WARNING
 		//--------------------------------------------
@@ -28,10 +35,15 @@ int main(int argc, char *argv[]){
 		uint16_t u_code = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
 		//--------------------------------------------
 
-		class USBIDs *a = new class USBIDs("./content");
-		std::string output = a->usageToString(page, u_code);
-		std::cout << output << std::endl;
-		delete a;
+		try{
+			class USBIDs a("./content");
+			std::string output = a.usageToString(page, u_code);
+			std::cout << output << std::endl;
+		}
+		catch(const syntax_error &e){
+			std::cerr << e.what() << std::endl;
+			return 1;
+		}
 	}
 	else if(argc == 5 && static_cast<std::string>(argv[1]) == "interface"){
 		//--------------------------------------------
@@ -42,10 +54,15 @@ int main(int argc, char *argv[]){
 		uint16_t p = static_cast<uint16_t>(std::stoi(argv[4], 0, 16));
 		//--------------------------------------------
 
-		class USBIDs *a = new class USBIDs("./content");
-		std::string output = a->interfaceToString(c, s, p);
-		std::cout << output << std::endl;
-		delete a;
+		try{
+			class USBIDs a("./content");
+			std::string output = a.interfaceToString(c, s, p);
+			std::cout << output << std::endl;
+		}
+		catch(const syntax_error &e){
+			std::cerr << e.what() << std::endl;
+			return 1;
+		}
 	}
 	else{
 		std::cout << "USBID-parser help message" << std::endl
