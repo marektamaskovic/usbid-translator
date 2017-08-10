@@ -7,10 +7,11 @@
 ###
 
 CXX=g++
-CXXFLAGS=-Wall -Wextra -pedantic -std=c++14 -o2 -fdiagnostics-color=always
+CXXFLAGS=-Wall -pedantic -std=c++14 -o2 -fdiagnostics-color=always -m64
+CXXFLAGSFUZZ=-Wall -Wextra -pedantic -std=c++14 -o2 -m64
 
 BIN=USBID-translator
-OBJECTS= main.o USBIDs.o
+OBJECTS= main.o USBIDs.o params.o
 
 all: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(BIN)
@@ -19,32 +20,30 @@ run:
 	./$(BIN)
 
 run_id:
-	./$(BIN) id 0x1 0x7778
-	./$(BIN) id 0x1 0x1
-	./$(BIN) id 0x2002 0x0
+	./$(BIN) id 0x1 0x7778 /usr/share/hwdata/usb.ids
+	./$(BIN) id 0x1 0x1 < /usr/share/hwdata/usb.ids
+	./$(BIN) id 0x2002 0x0 < /usr/share/hwdata/usb.ids
 
 run_inter:
-	./$(BIN) interface 0x1 0x1 0x1
-	./$(BIN) interface 0x0 0x1 0x1
-	./$(BIN) interface 0x2 0x2 0x1
+	./$(BIN) interface 0x1 0x1 0x1 < /usr/share/hwdata/usb.ids
+	./$(BIN) interface 0x0 0x1 0x1 < /usr/share/hwdata/usb.ids
+	./$(BIN) interface 0x2 0x2 0x1 /usr/share/hwdata/usb.ids
 
-run_usage:
-	./$(BIN) usage 0x00 0x000
-	./$(BIN) usage 0x01 0x001
-	./$(BIN) usage 0xfe 0x001
-
-run_cov: run_id run_inter run_usage
+run_cov: run_id run_inter
 	./$(BIN) --help
 	cp content_bad content
-	! ./$(BIN) id 0x1 0x7778
-	! ./$(BIN) interface 0x0 0x1 0x1
-	! ./$(BIN) usage 0x01 0x001
+	! ./$(BIN) id 0x1 0x7778 < ./content_bad
+	! ./$(BIN) interface 0x0 0x1 0x1 < ./content_bad
 	cp content_good content
 
 coverage: CXXFLAGS += --coverage
 coverage: all run_cov
 	lcov --capture --directory ./ --output-file coverage.info
 	genhtml coverage.info --output-directory=./html
+
+fuzzy: CXX = afl-g++
+fuzzy: CXXFLAGS = $(CXXFLAGSFUZZ)
+fuzzy: all
 
 clear: clean clear_coverage
 

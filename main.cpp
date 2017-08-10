@@ -1,76 +1,55 @@
 #include <iostream>
 #include <string>
 
+#include "params.hpp"
 #include "USBIDs.hpp"
+
 
 int main(int argc, char *argv[]){
 
-	// class USBIDs *a = new class USBIDs("./input");
+	std::ios::sync_with_stdio(true);
 
-	if(argc == 4 && static_cast<std::string>(argv[1]) == "id"){
-		//--------------------------------------------
-		// WARNING WARNING WARNING WARNING WARNING
-		//--------------------------------------------
-		uint16_t vid = static_cast<uint16_t>(std::stoi(argv[2], 0, 16));
-		uint16_t pid = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
-		//--------------------------------------------
+	std::istream *input = &(std::cin);
+	std::ifstream tmp;
+	params_t params;
+	parseParams(argc, argv, params);
 
-		// class USBIDs *a = new class USBIDs("./content");
-		try{
-			class USBIDs a("./content");
-			std::string output = a.idToString(vid, pid);
-			std::cout << output << std::endl;
-		}
-		catch(const syntax_error &e){
-			std::cerr << e.what() << std::endl;
-			return 1;
-		}
-		// delete a;
-	}
-	else if(argc == 4 && static_cast<std::string>(argv[1]) == "usage"){
-		//--------------------------------------------
-		// WARNING WARNING WARNING WARNING WARNING
-		//--------------------------------------------
-		uint16_t page = static_cast<uint16_t>(std::stoi(argv[2], 0, 16));
-		uint16_t u_code = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
-		//--------------------------------------------
+	if(params.filepath.length() != 0){
+		tmp.open(params.filepath, std::ifstream::in);
 
-		try{
-			class USBIDs a("./content");
-			std::string output = a.usageToString(page, u_code);
-			std::cout << output << std::endl;
-		}
-		catch(const syntax_error &e){
-			std::cerr << e.what() << std::endl;
-			return 1;
+		if(tmp.is_open()){
+			input = &tmp;
 		}
 	}
-	else if(argc == 5 && static_cast<std::string>(argv[1]) == "interface"){
-		//--------------------------------------------
-		// WARNING WARNING WARNING WARNING WARNING
-		//--------------------------------------------
-		uint16_t c = static_cast<uint16_t>(std::stoi(argv[2], 0, 16));
-		uint16_t s = static_cast<uint16_t>(std::stoi(argv[3], 0, 16));
-		uint16_t p = static_cast<uint16_t>(std::stoi(argv[4], 0, 16));
-		//--------------------------------------------
 
-		try{
-			class USBIDs a("./content");
-			std::string output = a.interfaceToString(c, s, p);
-			std::cout << output << std::endl;
+	if(params.help_f){
+		printHelp();
+		return 0;
+	}
+
+	try{
+		class USBIDs usb(input);
+		if(params.id_f){
+			std::cout << usb.idToString(params.id[0], params.id[1]) << std::endl;
+			return 0;
 		}
-		catch(const syntax_error &e){
-			std::cerr << e.what() << std::endl;
+		else if(params.interface_f){
+			std::cout << usb.interfaceToString(
+									params.interface[0],
+									params.interface[1],
+									params.interface[2]
+								 ) << std::endl;
+
+			return 0;
+		}
+		else{
+			std::cerr << "Unknown error occurred!";
 			return 1;
 		}
 	}
-	else{
-		std::cout << "USBID-parser help message" << std::endl
-				  << "Usage:" << std::endl
-				  << "USBID-parser [OPTION] args" << std::endl
-				  << "    id\t\tVID PID\t\t " << std::endl
-				  << "    interface\tC S P\t" << std::endl
-				  << "    usage\tVID PID\t\t " << std::endl;
+	catch(const syntax_error &e){
+		std::cerr << e.what() << std::endl;
+		return 1;
 	}
 
 

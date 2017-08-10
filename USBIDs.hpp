@@ -10,18 +10,18 @@
 #include <stdexcept>
 
 #include "types.hpp"
+#include "params.hpp"
 
 
 class USBIDs{
 public:
-	USBIDs(const std::string& filepath = "/usr/share/hwdata/usb.ids");
+	USBIDs(std::istream* input);
 
-	std::string usageToString(uint8_t page, uint16_t u_code);
 	std::string idToString(uint16_t vid, uint16_t pid);
 	std::string interfaceToString(uint8_t c, uint8_t s, uint8_t p);
 
 private:
-	int parseStream(const std::string &);
+	int parseStream(std::istream *);
 	usb_ids_t usb_info;
 };
 

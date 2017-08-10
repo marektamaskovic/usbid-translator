@@ -110,6 +110,14 @@ struct usb_ids_t{
 	std::vector<vctt_t> vctt;
 };
 
+struct params_t{
+	bool id_f {false};
+	bool interface_f {false};
+	bool help_f {false};
+	uint16_t id[2] {0,};
+	uint8_t interface[3] {0,};
+	std::string filepath {""};
+};
 
 #endif
 
