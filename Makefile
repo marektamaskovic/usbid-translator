@@ -7,8 +7,8 @@
 ###
 
 CXX=g++
-CXXFLAGS=-Wall -pedantic -std=c++14 -o2 -fdiagnostics-color=always -m64
-CXXFLAGSFUZZ=-Wall -Wextra -pedantic -std=c++14 -o2 -m64
+CXXFLAGS=-Wall -pedantic -std=c++14 -O2 -fdiagnostics-color=always -m64
+CXXFLAGSFUZZ=-Wall -Wextra -pedantic -std=c++14 -O2 -m64
 
 BIN=USBID-translator
 OBJECTS= main.o USBIDs.o params.o
