@@ -145,7 +145,7 @@ int USBIDs::parseStream(std::istream *input){
 	std::regex bias				("^BIAS\\s{1}[a-f0-9]{1}\\s{2}[\\W\\w]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
 	std::regex phy				("^PHY\\s{1}[a-f0-9]{2}\\s{2}[\\W\\w]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
 	std::regex hut_page			("^HUT\\s{1}[a-f0-9]{2}\\s{2}[\\W\\w]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
-	std::regex hut_usage		("^\t[a-f0-9]{3}\\s{2}[\\w\\W]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
+	std::regex hut_usage		("^\t[a-fA-F0-9]{3}\\s{2}[\\w\\W]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
 	std::regex l_language		("^L\\s{1}[a-f0-9]{4}\\s{2}[\\W\\w]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
 	std::regex l_dialect		("^\t[a-f0-9]{2}\\s{2}[\\W\\w]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
 	std::regex hcc				("^HCC\\s{1}[a-f0-9]{2}\\s{2}[\\W\\w]+", std::regex::ECMAScript | std::regex::icase | std::regex::optimize);
@@ -313,7 +313,7 @@ int USBIDs::parseStream(std::istream *input){
 			// std::cout <<"nope: '" << line << "'" <<std::endl;
 			if(line.length() > 0){
 				throw syntax_error(
-					"On line:" + std::to_string(line_num)
+					"On line:" + std::to_string(line_num) + ":" + line
 					+ ": " + "Syntax error"
 				);
 			}
