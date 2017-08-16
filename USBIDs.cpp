@@ -24,8 +24,8 @@ int insertInto(T &output, const std::string &line, const std::string &fmt_line, 
 }
 
 
-USBIDs::USBIDs(std::istream *input){
-	this->parseStream(input);
+USBIDs::USBIDs(const std::string &filename){
+	this->parseStream(filename);
 }
 
 std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
@@ -91,39 +91,66 @@ std::string USBIDs::interfaceToString(uint8_t c, uint8_t s, uint8_t p){
 }
 
 namespace usbid{
-	struct space2 : pegtl::two<' '> {};
-	struct name : pegtl::plus<pegtl::print> {};
-	struct number : pegtl::plus<pegtl::xdigit> {};
-	struct device : pegtl::must<pegtl::one<'\t'>, number, space2, name, pegtl::eol> {};
-	struct vendor : pegtl::must<number, space2, name, pegtl::eol> {};
-	struct vdi : pegtl::plus<pegtl::plus<vendor>, pegtl::plus<device>> {};
-	struct grammar : pegtl::must < vdi, pegtl::eof > {};
+	namespace grammar{
+		struct VCHAR : pegtl::internal::range< pegtl::internal::result_on_found::SUCCESS, pegtl::internal::peek_char, char( 33 ), char( 126 ) > {};
+		struct WSP : pegtl::internal::one< pegtl::internal::result_on_found::SUCCESS, pegtl::internal::peek_char, ' ', '\t' > {};
+		struct LF : pegtl::internal::one< pegtl::internal::result_on_found::SUCCESS, pegtl::internal::peek_char, '\n' > {};
+		struct comment_cont : pegtl::until< pegtl::eol, pegtl::sor< WSP, VCHAR > > {};
+		struct comment : pegtl::if_must< pegtl::one< '#' >, comment_cont > {};
+		struct c_nl : pegtl::sor< comment, LF > {};
+		struct c_wsp : pegtl::sor< WSP, pegtl::seq< c_nl, WSP > > {};
+
+		struct space2 : pegtl::istring<' ', ' '> {};
+		struct name : pegtl::plus<pegtl::print> {};
+		struct number : pegtl::plus<pegtl::xdigit> {};
+		struct line_inc : pegtl::success {};
+		struct device : pegtl::must<line_inc, pegtl::istring<'\t'>, number, space2, name, pegtl::eol> {};
+		struct vendor : pegtl::must<line_inc, number, space2, name, pegtl::eol> {};
+		struct vdi : pegtl::plus<pegtl::plus<vendor>, pegtl::plus<device>> {};
+		struct grammar : pegtl::until< pegtl::eof, pegtl::sor< pegtl::seq< pegtl::star< c_wsp >, c_nl >, pegtl::must< vdi > > > {};
+
+		template< typename Rule >
+		struct my_control: pegtl::normal< Rule > {
+			static const std::string error_message;
+
+			template< typename Input, typename ... States >
+			static void raise( const Input & in, States && ... )
+			{
+			  throw pegtl::parse_error( error_message, in );
+			}
+		};
+	
+		template< typename T >
+		const std::string my_control< T >::error_message =
+			"parse error matching " + pegtl::internal::demangle< T >();		
+
+	}
 
 	template< typename Rule > struct action : pegtl::nothing< Rule > {};
 
+	template<> struct action< grammar::device >
+	{
+		static void apply( const pegtl::input & in, usb_ids_t &name/*std::string & name*/ ) {
+			std::cout << "device: " << in.string() << std::endl;
+		}
+	};
+
+	template<> struct action< grammar::vendor >
+	{
+		static void apply( const pegtl::input & in, usb_ids_t &name/*std::string & name*/ ) {
+			std::cout << "device: " << in.string() << std::endl;
+		}
+	};
+
 }
 
-int USBIDs::parseStream(std::istream *input){
+int USBIDs::parseStream(const std::string &filename){
 
-	int line_num {0};
-	std::string line;
-
-	while(input->good()){
-		line_num++;
-		std::getline(*input, line);
-		if(line[0] == '#') {
-			// std::cout << "comment: '" << line << "'" << std::endl;
-			continue;
-		}
-		else{
-			try{
-				pegtl::parse<usbid::grammar, usbid::action>(line, "line:" + std::to_string(line_num), this->usb_info);
-			}
-			catch(pegtl::parse_error &e){
-				std::cerr << e.what() << std::endl;
-				continue;
-			}
-		}
+	try {
+		pegtl::file_parser( filename.c_str() ).parse<usbid::grammar::grammar, usbid::action, usbid::grammar::my_control>(usb_info);
+	}
+	catch(pegtl::parse_error &e){
+			std::cerr << e.what() << std::endl;
 	}
 
 	return 0;
