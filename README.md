@@ -14,8 +14,8 @@ Second number represents product ID.
 
 ## Interface
 
-Format: Three 16bit numbers
-, separated by a colon; `0000:0000:0000` ... `ffff:ffff:ffff`
+Format: Three 8bit numbers
+, separated by a colon; `00:00:00` ... `ff:ff:ff`
 
 First number represents interface class.
 Second number represents interface subclass.
