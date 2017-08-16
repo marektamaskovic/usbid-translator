@@ -9,9 +9,10 @@
 #include <exception>
 #include <stdexcept>
 
+#include "../PEGTL/pegtl.hh"
+
 #include "types.hpp"
 #include "params.hpp"
-
 
 class USBIDs{
 public:
