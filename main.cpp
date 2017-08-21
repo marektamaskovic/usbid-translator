@@ -7,20 +7,8 @@
 
 int main(int argc, char *argv[]){
 
-	std::ios::sync_with_stdio(true);
-
-	std::istream *input = &(std::cin);
-	std::ifstream tmp;
 	params_t params;
 	parseParams(argc, argv, params);
-
-	if(params.filepath.length() != 0){
-		tmp.open(params.filepath, std::ifstream::in);
-
-		if(tmp.is_open()){
-			input = &tmp;
-		}
-	}
 
 	if(params.help_f){
 		printHelp();
@@ -28,7 +16,7 @@ int main(int argc, char *argv[]){
 	}
 
 	try{
-		class USBIDs usb(input);
+		class USBIDs usb(params.filepath);
 		if(params.id_f){
 			std::cout << usb.idToString(params.id[0], params.id[1]) << std::endl;
 			return 0;

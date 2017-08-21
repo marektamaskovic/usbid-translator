@@ -108,6 +108,9 @@ struct usb_ids_t{
 	std::vector<lang_t> lang;
 	std::vector<hid_country_code_t> hid_country;
 	std::vector<vctt_t> vctt;
+
+	std::vector<std::string> num_buf;
+	std::vector<std::string> name_buf;
 };
 
 struct params_t{

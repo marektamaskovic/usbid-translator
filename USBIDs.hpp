@@ -16,13 +16,13 @@
 
 class USBIDs{
 public:
-	USBIDs(std::istream* input);
+	USBIDs(const std::string &);
 
 	std::string idToString(uint16_t vid, uint16_t pid);
 	std::string interfaceToString(uint8_t c, uint8_t s, uint8_t p);
 
 private:
-	int parseStream(std::istream *);
+	int parseStream(const std::string &);
 	usb_ids_t usb_info;
 };
 
