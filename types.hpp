@@ -111,7 +111,14 @@ struct usb_ids_t{
 
 	std::vector<std::string> num_buf;
 	std::vector<std::string> name_buf;
+
+	void buffer_pop(void){
+	this->name_buf.pop_back();
+	this->num_buf.pop_back();
+}
 };
+
+
 
 struct params_t{
 	bool id_f {false};
@@ -121,6 +128,8 @@ struct params_t{
 	uint8_t interface[3] {0,};
 	std::string filepath {""};
 };
+
+
 
 #endif
 

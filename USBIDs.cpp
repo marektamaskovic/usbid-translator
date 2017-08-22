@@ -32,7 +32,7 @@ int insertInto(T &output, const std::string &num, const std::string &name){
 	item.name = name;
 	item.id = id;
 	try{
-		output.push_back(item);
+		output.emplace_back(item);
 	}
 	catch(std::bad_alloc &e){
 		std::cout << e.what() <<std::endl;
@@ -112,18 +112,44 @@ namespace usbid{
 	using namespace pegtl;
 
 	struct space2 : istring< ' ', ' ' > {};
-	struct name : plus< print > {};
-	struct number : plus< xdigit > {};
+	struct name : plus< not_one< '\n' > > {};
+	struct number : if_must< xdigit > {};
+	struct number2 : if_must< xdigit, xdigit > {};
+	struct number3 : if_must< xdigit, xdigit, xdigit > {};
+	struct number4 : if_must< xdigit, xdigit, xdigit, xdigit > {};
 
-	struct vendor : if_must< number, space2, name, eol > {};
-	struct device : if_must< space, number, space2, name > {};
-	struct vdi : must< vendor, plus< device > > {};
+	struct comment : if_must< one< '#' >, until< eol > > {};
+	struct empty_line : if_must<plus< sor< space, eol > >> {};
+	struct nothing : sor< empty_line, comment > {};
 
-	struct something : sor< vdi > {};
+	struct interface : if_must < two< '\t' >, number4, space2, name, eol > {};
+	struct device : if_must< one<'\t'>, number4, space2, name, eol, star< interface > > {};
+	struct vendor : if_must< number4, space2, name, eol > {};
+	struct vdi : if_must< vendor, star< sor< device, comment > > > {};
 
-	struct comment : if_must< one< '#' >, until< eolf > > {};
-	struct space : plus< sor< space > > {};
-	struct nothing : sor< space, comment > {};
+	struct protocol : if_must< two<'\t'>, number2, space2, name, eol > {};
+	struct subclass : if_must< one<'\t'>, number2, space2, name, eol > {};
+	struct subcls : if_must< subclass, star< protocol > > {};
+	struct cls : if_must< istring<'C',' '>, number2, space2, name, eol> {};
+	struct csp : if_must< cls, star< subcls > > {};
+
+	struct hut_page : if_must< istring<'H','U','T',' '>, number2, space2, name, eol > {};
+	struct hut_usage : if_must< one<'\t'>, number3, space2, name, eol > {};
+	struct hut: if_must< hut_usage, star< hut_page > > {};
+
+	struct dialect: if_must< one<'\t'>, number2, space2, name, eol > {};
+	struct lang: if_must< istring<'L', ' '>, number4, space2, name, eol > {};
+	struct l : if_must< lang, star<dialect> > {};
+
+	struct at : if_must< istring< 'A', 'T', ' '>, number4, space2, name, eol > {};
+	struct hid : if_must< istring< 'H', 'I', 'D', ' '>, number2, space2, name, eol > {};
+	struct r : if_must< istring< 'R', ' '>, number2, space2, name, eol > {};
+	struct bias : if_must< istring< 'B', 'I', 'A', 'S', ' '>, number, space2, name, eol > {};
+	struct phy : if_must< istring< 'P', 'H', 'Y', ' '>, number2, space2, name, eol > {};
+	struct hcc : if_must< istring< 'H', 'C', 'C', ' '>, number2, space2, name, eol > {};
+	struct vt : if_must< istring< 'A', 'T', ' '>, number4, space2, name, eol > {};
+
+	struct something : sor< at, hid, r, bias, phy, hut, l, csp, vdi, hcc, vt, comment > {};
 
 	struct anything: sor< something, nothing > {};
 	struct grammar : until< eof, anything > {};
@@ -133,6 +159,13 @@ namespace usbid{
 
 	template< typename Rule > struct action : pegtl::nothing< Rule > {};
 
+	template<> struct action< empty_line > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "name: " << in.string() << std::endl;
+			// std::cout << "empty_line:" << "->" << in.string() << "<-" << std::endl;
+		}
+	};
+
 	template<> struct action< name > {
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
 			// std::cout << "name: " << in.string() << std::endl;
@@ -140,7 +173,21 @@ namespace usbid{
 		}
 	};
 
-	template<> struct action< number > {
+	template<> struct action< number2 > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "num: " << in.string() << std::endl;
+			usb_ids.num_buf.push_back( in.string() );
+		}
+	};
+
+	template<> struct action< number3 > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "num: " << in.string() << std::endl;
+			usb_ids.num_buf.push_back( in.string() );
+		}
+	};
+
+	template<> struct action< number4 > {
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
 			// std::cout << "num: " << in.string() << std::endl;
 			usb_ids.num_buf.push_back( in.string() );
@@ -149,35 +196,59 @@ namespace usbid{
 
 	template<> struct action< vendor > {
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
-			//usb_ids.num_buf.push_back( in.string() );
-			// std::cout << "v:" << usb_ids.num_buf.back() << " " << usb_ids.name_buf.back() << std::endl;
-			// std::cout << "v:" <<std::endl;
+			// std::cout << "v:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
 			insertInto(usb_ids.vendors, usb_ids.num_buf.back(), usb_ids.name_buf.back());
-			usb_ids.name_buf.pop_back(); usb_ids.num_buf.pop_back();
+			usb_ids.buffer_pop();
 		}
 	};
 
 	template<> struct action< device > {
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
-			//usb_ids.num_buf.push_back( in.string() );
-			// std::cout << usb_ids.num_buf.back() << " " << usb_ids.name_buf.back() << std::endl;
-			// std::cout << "d:" <<std::endl;
+			// std::cout << "d:\t" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
 			insertInto(usb_ids.vendors.back().devices, usb_ids.num_buf.back(), usb_ids.name_buf.back());
-			usb_ids.name_buf.pop_back(); usb_ids.num_buf.pop_back();
+			usb_ids.buffer_pop();
 		}
 	};
 
-	// template<> struct action< pegtl::eol > {
-	// 	static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
-	// 		//usb_ids.num_buf.push_back( in.string() );
-	// 		// std::cout << "new line parsed" << std::endl;
-	// 	}
-	// };
-
-	template<> struct action< pegtl::any > {
+	template<> struct action< cls > {
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
-			//usb_ids.num_buf.push_back( in.string() );
-			std::cout << "parsed: '" << in.string() << "'" << std::endl;
+			// std::cout << "class:" << usb_ids.num_buf.back() << " " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.dev_class,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< subclass > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "sclass:" << usb_ids.num_buf.back() << " " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.dev_class.back().subclass,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< protocol > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "prot:" << usb_ids.num_buf.back() << " " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.dev_class.back().subclass.back().protocol,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< comment > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "comment: '" << in.string() << "'" << std::endl;
 		}
 	};
 
@@ -192,9 +263,9 @@ namespace usbid{
 			}
 		};
 
-		template< typename T >
-		const std::string my_control< T >::error_message =
-		"parse error matching " + pegtl::internal::demangle< T >(); 
+	template< typename T >
+	const std::string my_control< T >::error_message =
+	"parse error matching " + pegtl::internal::demangle< T >();
 }
 
 int USBIDs::parseStream(const std::string &filename){
