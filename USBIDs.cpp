@@ -135,7 +135,7 @@ namespace usbid{
 
 	struct hut_page : if_must< istring<'H','U','T',' '>, number2, space2, name, eol > {};
 	struct hut_usage : if_must< one<'\t'>, number3, space2, name, eol > {};
-	struct hut: if_must< hut_usage, star< hut_page > > {};
+	struct hut: if_must< hut_page, star< hut_usage > > {};
 
 	struct dialect: if_must< one<'\t'>, number2, space2, name, eol > {};
 	struct lang: if_must< istring<'L', ' '>, number4, space2, name, eol > {};
@@ -147,9 +147,9 @@ namespace usbid{
 	struct bias : if_must< istring< 'B', 'I', 'A', 'S', ' '>, number, space2, name, eol > {};
 	struct phy : if_must< istring< 'P', 'H', 'Y', ' '>, number2, space2, name, eol > {};
 	struct hcc : if_must< istring< 'H', 'C', 'C', ' '>, number2, space2, name, eol > {};
-	struct vt : if_must< istring< 'A', 'T', ' '>, number4, space2, name, eol > {};
+	struct vt : if_must< istring< 'V', 'T', ' '>, number4, space2, name, eol > {};
 
-	struct something : sor< at, hid, r, bias, phy, hut, l, csp, vdi, hcc, vt, comment > {};
+	struct something : sor< at, hid, r, bias, phy, vt, hut, l, csp, vdi, hcc, comment > {};
 
 	struct anything: sor< something, nothing > {};
 	struct grammar : until< eof, anything > {};
@@ -170,6 +170,13 @@ namespace usbid{
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
 			// std::cout << "name: " << in.string() << std::endl;
 			usb_ids.name_buf.push_back( in.string() );
+		}
+	};
+
+	template<> struct action< number > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "num: " << in.string() << std::endl;
+			usb_ids.num_buf.push_back( in.string() );
 		}
 	};
 
@@ -236,7 +243,6 @@ namespace usbid{
 
 	template<> struct action< protocol > {
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
-			// std::cout << "prot:" << usb_ids.num_buf.back() << " " << usb_ids.name_buf.back() << std::endl;
 			insertInto(
 					usb_ids.dev_class.back().subclass.back().protocol,
 					usb_ids.num_buf.back(),
@@ -248,7 +254,140 @@ namespace usbid{
 
 	template<> struct action< comment > {
 		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// only for debug
 			// std::cout << "comment: '" << in.string() << "'" << std::endl;
+		}
+	};
+
+	template<> struct action< at > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "at:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.actt,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< hid > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "hid:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.hid_desc,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< r > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "r:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.hid_item,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< bias > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "bias:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.bias,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< phy > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "phy:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.phy_item,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< hut_page > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "hp:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.hid_usage_pages,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< hut_usage > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "hu:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.hid_usage_pages.back().usage,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< lang > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "l:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.lang,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< dialect > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "d:\t" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.lang.back().dialects,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< vt > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "at:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.vctt,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
+		}
+	};
+
+	template<> struct action< hcc > {
+		static void apply(const pegtl::input & in, usb_ids_t & usb_ids) {
+			// std::cout << "hcc:" << usb_ids.num_buf.back() << "  " << usb_ids.name_buf.back() << std::endl;
+			insertInto(
+					usb_ids.hid_country,
+					usb_ids.num_buf.back(),
+					usb_ids.name_buf.back()
+				);
+			usb_ids.buffer_pop();
 		}
 	};
 
@@ -275,6 +414,7 @@ int USBIDs::parseStream(const std::string &filename){
 	}
 	catch(pegtl::parse_error &e){
 			std::cerr << e.what() << std::endl;
+			throw syntax_error("syntax error");
 	}
 
 	return 0;

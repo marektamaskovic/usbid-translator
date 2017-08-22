@@ -7,7 +7,7 @@
 ###
 
 CXX=g++
-CXXFLAGS=-Wall -pedantic -std=c++11 -O2 -fdiagnostics-color=always -m64
+CXXFLAGS=-Wall -pedantic -std=c++11 -fdiagnostics-color=always -m64
 CXXFLAGSFUZZ=-Wall -Wextra -pedantic -std=c++14 -O2 -m64
 
 BIN=USBID-translator
@@ -21,20 +21,21 @@ run:
 
 run_id:
 	./$(BIN) id 0x1 0x7778 /usr/share/hwdata/usb.ids
-	./$(BIN) id 0x1 0x1 < /usr/share/hwdata/usb.ids
-	./$(BIN) id 0x2002 0x0 < /usr/share/hwdata/usb.ids
+	./$(BIN) id 0x1 0x1 /usr/share/hwdata/usb.ids
+	./$(BIN) id 0x2002 0x0 /usr/share/hwdata/usb.ids
 
 run_inter:
-	./$(BIN) interface 0x1 0x1 0x1 < /usr/share/hwdata/usb.ids
-	./$(BIN) interface 0x0 0x1 0x1 < /usr/share/hwdata/usb.ids
+	./$(BIN) interface 0x1 0x1 0x1 /usr/share/hwdata/usb.ids
+	./$(BIN) interface 0x0 0x1 0x1 /usr/share/hwdata/usb.ids
 	./$(BIN) interface 0x2 0x2 0x1 /usr/share/hwdata/usb.ids
 
 run_cov: run_id run_inter
 	./$(BIN) --help
+	! ./$(BIN) asdf
 	cp content_bad content
-	! ./$(BIN) id 0x1 0x7778 < ./content_bad
-	! ./$(BIN) interface 0x0 0x1 0x1 < ./content_bad
-	cp content_good content
+	! ./$(BIN) id 0x1 0x7778 ./content_bad
+	! ./$(BIN) interface 0x0 0x1 0x1 ./content_bad
+	cp /usr/share/hwdata/usb.ids content
 
 coverage: CXXFLAGS += --coverage
 coverage: all run_cov

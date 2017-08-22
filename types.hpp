@@ -113,9 +113,9 @@ struct usb_ids_t{
 	std::vector<std::string> name_buf;
 
 	void buffer_pop(void){
-	this->name_buf.pop_back();
-	this->num_buf.pop_back();
-}
+		this->name_buf.pop_back();
+		this->num_buf.pop_back();
+	}
 };
 
 
