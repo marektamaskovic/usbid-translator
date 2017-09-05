@@ -152,10 +152,7 @@ namespace usbid{
 	struct something : sor< at, hid, r, bias, phy, vt, hut, l, csp, vdi, hcc, comment > {};
 
 	struct anything: sor< something, nothing > {};
-	struct grammar : until< eof, anything > {};
-
-
-
+	struct grammar : must< until< eof, anything > >{};
 
 	template< typename Rule > struct action : pegtl::nothing< Rule > {};
 
