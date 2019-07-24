@@ -75,12 +75,17 @@ std::string USBIDs::idToString(uint16_t vid, uint16_t pid){
 		++vendor_it)
 	{
 		if(vendor_it->id == vid && vendor_it->devices.size() != 0){
+			// std::cout << vendor_it->name << std::endl;
 			for(auto device_it = vendor_it->devices.begin();
 				device_it != vendor_it->devices.end();
 				++device_it)
 			{
 				if(device_it->id == pid){
 					return vendor_it->name + "::" + device_it->name;
+				}
+
+				if(device_it == vendor_it->devices.end()-1){
+					return vendor_it->name + "::<unknown_value> " ;
 				}
 			}
 		}
