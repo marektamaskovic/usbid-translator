@@ -9,7 +9,7 @@
 #include <exception>
 #include <stdexcept>
 
-#include "types.hpp"
+#include "USBIDsTypes.hpp"
 #include "params.hpp"
 
 

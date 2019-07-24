@@ -1,7 +1,7 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-#include "types.hpp"
+#include "USBIDsTypes.hpp"
 
 
 int parseParams(int argc, char *argv[], params_t &params);
